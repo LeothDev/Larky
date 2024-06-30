@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Larky Testing Dashboard</title>
+    <script src="https://unpkg.com/htmx.org@2.0.0"></script>
+</head>
+<body>
+    <h1>This is a Testing Dashboard Page!</h1>
+    <button id="sendTestMsg"
+            hx-post="/send-test-msg"
+            hx-trigger="click"
+            hx-target="#response"
+            hx-swap="innerHTML">
+        Send Test Message
+    </button>
+    <div id="response"></div>
+</body>
+</html>

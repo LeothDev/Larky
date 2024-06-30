@@ -7,9 +7,9 @@ import (
 )
 
 func HelloHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("helloHandler was called!")
+	fmt.Println("helloHandler was called for testing!")
 	if r.URL.Path != "/hello" {
-		http.Error(w, "404 Not Found", http.StatusNotFound)
+		http.Error(w, "Unreachable State", http.StatusNotFound)
 		return
 	}
 
