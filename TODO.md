@@ -8,6 +8,7 @@
 - [ ] Button Actions
 - [ ] Token Encription
 - [ ] Redirect for non-Lark Users
+- [ ] Drop the connection after X failed attempts
 
 ### Bot Features (Not in Order)
 - [ ] Excel Duplicates Cleaning (Based on Language)

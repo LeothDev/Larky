@@ -41,12 +41,10 @@ func TestHandler(w http.ResponseWriter, r *http.Request) {
 
 func SendTestMessageHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("The Test Button has been Clicked!")
-	/*
-		if r.Method != "POST" {
-			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-			return
-		}
-	*/
+	if r.Method != "POST" {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
 	larkyBot := lark.NewChatBot(bot.Init())
 	_ = larkyBot.StartHeartbeat()
