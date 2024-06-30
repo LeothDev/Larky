@@ -17,3 +17,6 @@
 
 ### *To Fix*
 - [X] HTMX and SendTestMessageHandler (Infinite Requests)
+
+### *WIP*
+- [X] Encryption & Validation Webhook
