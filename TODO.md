@@ -6,7 +6,7 @@
 ### General - To Implement (Not in Order) 
 - [ ] DB for active chats
 - [ ] Button Actions
-- [ ] Token Encription
+- [X] Token Encription
 - [ ] Redirect for non-Lark Users
 - [ ] Drop the connection after X failed attempts
 
@@ -17,3 +17,6 @@
 
 ### *To Fix*
 - [X] HTMX and SendTestMessageHandler (Infinite Requests)
+- [X] Encryption & Validation Webhook
+
+### *WIP*
