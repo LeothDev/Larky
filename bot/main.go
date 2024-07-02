@@ -53,6 +53,7 @@ func MsgTest(bot *lark.Bot) error {
 	return nil
 }
 
+// HandleEvent takes care of the user input and handles the response
 func HandleEvent(eventContent json.RawMessage) error {
 	fmt.Printf("Raw JSON: %s", eventContent)
 	return nil
