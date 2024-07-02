@@ -53,10 +53,18 @@ func SendTestMessageHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-
 	resp := map[string]string{"success": "Message Sent Successfully!"}
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		return
+	}
+}
+
+func WebhookEventHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("I'm Handling an EVENT!")
+	resp := map[string]string{"Success": "Message Validated!"}
+	err := json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		return
 	}

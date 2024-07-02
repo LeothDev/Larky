@@ -7,4 +7,5 @@ func RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/auth/webhook", WebhookHandler)
 	mux.HandleFunc("/test", TestHandler)
 	mux.HandleFunc("/send-test-msg", SendTestMessageHandler)
+	mux.HandleFunc("/auth/webhook/event", WebhookEventHandler)
 }
