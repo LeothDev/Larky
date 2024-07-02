@@ -3,17 +3,23 @@ package bot
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"github.com/go-lark/lark"
 	"log"
 	"os"
-	_ "strings"
 )
 
-func Init() (string, string) {
-	appID := os.Getenv("APP_ID")
-	appSecret := os.Getenv("APP_SECRET")
-	return appID, appSecret
+type Bot struct {
+	AppID     string
+	AppSecret string
+}
+
+func NewBot() *Bot {
+	return &Bot{
+		AppID:     os.Getenv("APP_ID"),
+		AppSecret: os.Getenv("APP_SECRET"),
+	}
 }
 
 // SignatureValidation to verify Lark requests
@@ -44,5 +50,10 @@ func MsgTest(bot *lark.Bot) error {
 		log.Fatalf("Failed to send message: %v", err)
 		return err
 	}
+	return nil
+}
+
+func HandleEvent(eventContent json.RawMessage) error {
+	fmt.Printf("Raw JSON: %s", eventContent)
 	return nil
 }

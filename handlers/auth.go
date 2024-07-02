@@ -2,13 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
-	_ "encoding/json"
 	"fmt"
 	"github.com/larky/bot"
 	"github.com/larky/utils"
 	"io"
 	"log"
-	_ "log"
 	"net/http"
 	"os"
 	"time"
@@ -16,29 +14,31 @@ import (
 
 // WebhookValidation is a struct holding important request information to parse
 type WebhookValidation struct {
-	EncryptKey   string
-	Timestamp    string
-	Nonce        string
-	Signature    string
-	RequestType  string
-	BodyBytes    []byte
-	Encrypt      string `json:"encrypt"`
-	Challenge    string `json:"challenge"`
-	EventContent string `json:"event"`
+	EncryptKey    string
+	Timestamp     string
+	Nonce         string
+	Signature     string
+	RequestType   string
+	BodyBytes     []byte
+	EncryptedBody string          `json:"encrypt"`
+	Challenge     string          `json:"challenge"`
+	EventContent  json.RawMessage `json:"event"`
+	ErrorCount    int
 }
 
 // newWebhookValidation is a constructor function that initialises RequestType to "Unknown"
 func newWebhookValidation() *WebhookValidation {
 	return &WebhookValidation{
-		EncryptKey:   "",
-		Timestamp:    "",
-		Nonce:        "",
-		Signature:    "",
-		RequestType:  "Unknown",
-		BodyBytes:    nil,
-		Encrypt:      "",
-		Challenge:    "",
-		EventContent: "",
+		EncryptKey:    "",
+		Timestamp:     "",
+		Nonce:         "",
+		Signature:     "",
+		RequestType:   "Unknown",
+		BodyBytes:     nil,
+		EncryptedBody: "",
+		Challenge:     "",
+		EventContent:  nil, // or json.RawMessage("{}")
+		ErrorCount:    0,
 	}
 }
 
@@ -66,10 +66,12 @@ func (wv *WebhookValidation) verificationStep(w http.ResponseWriter) {
 // verificationChallenge decrypts the message, retrieves the challenge code and returns it
 // to the Larksuite server
 func (wv *WebhookValidation) verificationChallenge(w http.ResponseWriter) {
-	encryptedContent := wv.Encrypt
-	decryptedContent := utils.Decrypt(wv.EncryptKey, encryptedContent)
+	decryptedContent := utils.Decrypt(wv.EncryptKey, wv.EncryptedBody)
+	fmt.Printf("DecryptedContent: %s\n\n", decryptedContent)
 	if err := json.Unmarshal([]byte(decryptedContent), wv); err != nil {
-		log.Fatalf("Unable to marshal JSON due to %s", err)
+		wv.ErrorCount++
+		log.Fatalf("Unable to marshal JSON for 'challenge' due to %s", err)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -82,8 +84,24 @@ func (wv *WebhookValidation) verificationChallenge(w http.ResponseWriter) {
 
 // eventStep takes care of handling events coming from user interactions
 func (wv *WebhookValidation) eventStep(w http.ResponseWriter) {
+	if err := json.Unmarshal(wv.BodyBytes, wv); err != nil {
+		log.Fatalf("Unable to marshal JSON for 'encrypt' due to %s", err)
+	}
+
+	// fmt.Println("I'm in EventStep")
+	fmt.Printf("EncryptedBody: %s\n\n ", wv.EncryptedBody)
+	decryptedContent := utils.Decrypt(wv.EncryptKey, wv.EncryptedBody)
+	fmt.Printf("DecryptedContent: %s\n", decryptedContent)
+	if err := json.Unmarshal([]byte(decryptedContent), wv); err != nil {
+		log.Fatalf("Unable to marshal JSON for 'event' due to %s", err)
+		return
+	}
+	if err := bot.HandleEvent(wv.EventContent); err != nil {
+		log.Fatalf("Unable to satisfy request due to %s", err)
+	}
 	wv.RequestType = "Event"
 	w.WriteHeader(http.StatusOK)
+
 }
 
 // WebhookHandler handles all the requests to the endpoint 'auth/webhook'
@@ -106,7 +124,7 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("BodyBytes: %s\n", wv.BodyBytes)
+	// fmt.Printf("BodyBytes: %s\n", wv.BodyBytes)
 	if wv.Signature != "" {
 		isValidRequest := bot.SignatureValidation(wv.Timestamp, wv.Nonce, wv.EncryptKey, wv.Signature, wv.BodyBytes)
 		if isValidRequest {
