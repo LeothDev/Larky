@@ -1,5 +1,6 @@
 package bot
 
+// TODO: Update HandleEvent
 import (
 	"bytes"
 	"crypto/sha256"
@@ -7,20 +8,9 @@ import (
 	"fmt"
 	"github.com/go-lark/lark"
 	"log"
+	"net/http"
 	"os"
 )
-
-type Bot struct {
-	AppID     string
-	AppSecret string
-}
-
-func NewBot() *Bot {
-	return &Bot{
-		AppID:     os.Getenv("APP_ID"),
-		AppSecret: os.Getenv("APP_SECRET"),
-	}
-}
 
 // SignatureValidation to verify Lark requests
 func SignatureValidation(timestamp, nonce, encryptKey, signature string, bodyBytes []byte) bool {
@@ -53,8 +43,34 @@ func MsgTest(bot *lark.Bot) error {
 	return nil
 }
 
+// getIDandSecret returns APP_ID and APP_SECRET
+func getIDandSecret() (string, string) {
+	appID := os.Getenv("APP_ID")
+	appSecret := os.Getenv("APP_SECRET")
+	return appID, appSecret
+}
+
 // HandleEvent takes care of the user input and handles the response
-func HandleEvent(eventContent json.RawMessage) error {
-	fmt.Printf("Raw JSON: %s", eventContent)
+func LogicEvent(reqBody json.RawMessage, w http.ResponseWriter) error {
+	handler := NewHandler()
+	var e FullEvent
+	_ = e.GetEventJSON(reqBody)
+
+	if eventHandler, ok := handler.Handlers[e.Header.EventType]; ok {
+		bot := lark.NewChatBot(getIDandSecret())
+		_ = bot.StartHeartbeat()
+		eventHandler(e, bot)
+		w.WriteHeader(http.StatusOK)
+	} else {
+		fmt.Printf("No handler found for event type %s\n", e.Header.EventType)
+	}
+	fmt.Printf("Header | EventID and EventType: %s, %s\n", e.Header.EventID, e.Header.EventType)
+	fmt.Printf("EventBody: %s\n", e.EventBody)
+	fmt.Printf("Message Params: %s, %s\n", e.Event.Message.MessageType, e.Event.Message.Content)
 	return nil
+	// fmt.Printf("Raw JSON: %s\n\n", reqBody)
+	// fmt.Printf("Header EventID and EventType: %s, %s\n", e.Header.EventID, e.Header.EventType)
+	// fmt.Printf("EventBody: %s\n", e.EventBody)
+	// bot := lark.NewChatBot(getIDandSecret())
+	// _ = bot.StartHeartbeat()
 }

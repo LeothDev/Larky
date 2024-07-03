@@ -14,21 +14,27 @@
 - [ ] Possible Base Integration
 
 ### *To Consider*
-- Full JSON request instead of only the *"event"* parameter
+- Full JSON request instead of only the *"event"* parameter [DONE]
+
+### *Removed*
+- Redirect Event Webhook and Handle the Endpoint (Reconsider?)
+
 
 ### *TODO*
+- [ ] Excel File Handling - Remove duplicates
 - [ ] Drop the connection after X failed attempts
-- [ ] Redirect Event Webhook and Handle the Endpoint (Reconsider?)
 - [ ] Enforce more protection from unknown requests
 - [ ] Implement Testing Dashboard in the web app
 
 ### *To Fix*
 
 ### *WIP*
-- [ ] EventStep Handling
+- [ ] Add specific user commands to which the bot responds (Starting with '!')
 
 ### *DONE*
 - [X] Token Encryption
 - [X] Encryption & Validation Webhook
 - [X] Signature Validation
 - [X] Split between Event and Verification Requests
+- [X] EventStep Handling
+- [X] Implement ~~Interface~~ map with signature function for mapping event_type with function to call

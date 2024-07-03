@@ -20,9 +20,9 @@ type WebhookValidation struct {
 	Signature     string
 	RequestType   string
 	BodyBytes     []byte
-	EncryptedBody string          `json:"encrypt"`
-	Challenge     string          `json:"challenge"`
-	EventContent  json.RawMessage `json:"event"`
+	EncryptedBody string `json:"encrypt"`
+	Challenge     string `json:"challenge"`
+	ReqBody       json.RawMessage
 	ErrorCount    int
 }
 
@@ -37,7 +37,7 @@ func newWebhookValidation() *WebhookValidation {
 		BodyBytes:     nil,
 		EncryptedBody: "",
 		Challenge:     "",
-		EventContent:  nil, // or json.RawMessage("{}")
+		ReqBody:       nil, // or json.RawMessage("{}")
 		ErrorCount:    0,
 	}
 }
@@ -67,7 +67,7 @@ func (wv *WebhookValidation) verificationStep(w http.ResponseWriter) {
 // to the Larksuite server
 func (wv *WebhookValidation) verificationChallenge(w http.ResponseWriter) {
 	decryptedContent := utils.Decrypt(wv.EncryptKey, wv.EncryptedBody)
-	fmt.Printf("DecryptedContent: %s\n\n", decryptedContent)
+	// fmt.Printf("DecryptedContent: %s\n\n", decryptedContent)
 	if err := json.Unmarshal([]byte(decryptedContent), wv); err != nil {
 		wv.ErrorCount++
 		log.Fatalf("Unable to marshal JSON for 'challenge' due to %s", err)
@@ -84,23 +84,25 @@ func (wv *WebhookValidation) verificationChallenge(w http.ResponseWriter) {
 
 // eventStep takes care of handling events coming from user interactions
 func (wv *WebhookValidation) eventStep(w http.ResponseWriter) {
+	wv.RequestType = "Event"
 	if err := json.Unmarshal(wv.BodyBytes, wv); err != nil {
 		log.Fatalf("Unable to marshal JSON for 'encrypt' due to %s", err)
 	}
 
 	// fmt.Println("I'm in EventStep")
-	fmt.Printf("EncryptedBody: %s\n\n ", wv.EncryptedBody)
+	// fmt.Printf("EncryptedBody: %s\n\n ", wv.EncryptedBody)
 	decryptedContent := utils.Decrypt(wv.EncryptKey, wv.EncryptedBody)
-	fmt.Printf("DecryptedContent: %s\n", decryptedContent)
-	if err := json.Unmarshal([]byte(decryptedContent), wv); err != nil {
-		log.Fatalf("Unable to marshal JSON for 'event' due to %s", err)
-		return
-	}
-	if err := bot.HandleEvent(wv.EventContent); err != nil {
+	wv.ReqBody = []byte(decryptedContent)
+	fmt.Printf("DecryptedContent: %s\n", wv.ReqBody)
+	/*
+		if err := json.Unmarshal([]byte(decryptedContent), wv); err != nil {
+			log.Fatalf("Unable to marshal JSON for 'event' due to %s", err)
+			return
+		}
+	*/
+	if err := bot.LogicEvent(wv.ReqBody, w); err != nil {
 		log.Fatalf("Unable to satisfy request due to %s", err)
 	}
-	wv.RequestType = "Event"
-	w.WriteHeader(http.StatusOK)
 
 }
 
