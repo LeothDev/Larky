@@ -27,8 +27,10 @@
 - [ ] Implement Testing Dashboard in the web app
 
 ### *To Fix*
-
+- [ ] Remove duplicate requests by logging and checking "event_id" 
+- [ ] User Session Not Being Stateful 
 ### *WIP*
+- [ ] User Session and State Transitions
 - [ ] Add specific user commands to which the bot responds (Starting with '!')
 
 ### *DONE*

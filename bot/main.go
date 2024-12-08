@@ -51,16 +51,17 @@ func getIDandSecret() (string, string) {
 }
 
 // HandleEvent takes care of the user input and handles the response
-func LogicEvent(reqBody json.RawMessage, w http.ResponseWriter) error {
+func LogicEvent(reqBody json.RawMessage, w http.ResponseWriter, commands *Commands) error {
 	handler := NewHandler()
 	var e FullEvent
+	// TODO: INITIALIZE NEWCOMMANDS IN THE MAIN SERVER FILE
+	// commands := NewCommands()
 	_ = e.GetEventJSON(reqBody)
 
 	if eventHandler, ok := handler.Handlers[e.Header.EventType]; ok {
 		bot := lark.NewChatBot(getIDandSecret())
 		_ = bot.StartHeartbeat()
-		eventHandler(e, bot)
-		w.WriteHeader(http.StatusOK)
+		eventHandler(e, bot, commands)
 	} else {
 		fmt.Printf("No handler found for event type %s\n", e.Header.EventType)
 	}

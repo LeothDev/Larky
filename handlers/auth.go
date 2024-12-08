@@ -83,7 +83,8 @@ func (wv *WebhookValidation) verificationChallenge(w http.ResponseWriter) {
 }
 
 // eventStep takes care of handling events coming from user interactions
-func (wv *WebhookValidation) eventStep(w http.ResponseWriter) {
+func (wv *WebhookValidation) eventStep(w http.ResponseWriter, c *bot.Commands) {
+	w.WriteHeader(http.StatusOK) // Send 200 to server if the handle is recognized
 	wv.RequestType = "Event"
 	if err := json.Unmarshal(wv.BodyBytes, wv); err != nil {
 		log.Fatalf("Unable to marshal JSON for 'encrypt' due to %s", err)
@@ -100,14 +101,14 @@ func (wv *WebhookValidation) eventStep(w http.ResponseWriter) {
 			return
 		}
 	*/
-	if err := bot.LogicEvent(wv.ReqBody, w); err != nil {
+	if err := bot.LogicEvent(wv.ReqBody, w, c); err != nil {
 		log.Fatalf("Unable to satisfy request due to %s", err)
 	}
 
 }
 
 // WebhookHandler handles all the requests to the endpoint 'auth/webhook'
-func WebhookHandler(w http.ResponseWriter, r *http.Request) {
+func WebhookHandler(w http.ResponseWriter, r *http.Request, c *bot.Commands) {
 	fmt.Printf("Received request at %v from %v\n", time.Now(), r.RemoteAddr)
 	if r.Method != "POST" {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -130,7 +131,7 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	if wv.Signature != "" {
 		isValidRequest := bot.SignatureValidation(wv.Timestamp, wv.Nonce, wv.EncryptKey, wv.Signature, wv.BodyBytes)
 		if isValidRequest {
-			wv.eventStep(w)
+			wv.eventStep(w, c)
 		} else {
 			http.Error(w, "Bad Request, Failed Signature Validation", http.StatusBadRequest)
 		}
