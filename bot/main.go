@@ -60,6 +60,8 @@ func LogicEvent(reqBody json.RawMessage, w http.ResponseWriter, commands *Comman
 
 	if eventHandler, ok := handler.Handlers[e.Header.EventType]; ok {
 		bot := lark.NewChatBot(getIDandSecret())
+		bot.SetDomain(lark.DomainLark)
+		fmt.Printf("BOT DOMAIN: %s\n\n", bot.Domain())
 		_ = bot.StartHeartbeat()
 		eventHandler(e, bot, commands)
 	} else {

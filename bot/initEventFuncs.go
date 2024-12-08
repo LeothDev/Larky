@@ -7,6 +7,7 @@ import (
 	"github.com/go-lark/lark"
 	"github.com/larky/utils"
 	"log"
+	"os"
 	"strings"
 )
 
@@ -97,12 +98,30 @@ func HandleEventMessageReceived(event FullEvent, bot *lark.Bot, commands *Comman
 			file := RetrieveFile(bot, accessToken, messageID, fileKey)
 			fileName = strings.TrimSuffix(fileName, ".xlsx")
 			readerFile := bytes.NewReader(file)
-			bufferFile, newFileName, _ := ProcessXcelFile(readerFile, fileName)
+			processedFile, newFileName, _ := ProcessXcelFile(readerFile, fileName)
+			/*req := lark.UploadFilesRequest{
+				FileName:   fileName,
+				File:       file,
+				ParentType: "explorer",
+				ParentNode: os.Getenv("ZGAME-FOLDER_TOKEN"),
+			}*/
+
+			req := lark.ImportSpreadsheetRequest{
+				File:        processedFile,
+				FileName:    newFileName,
+				FolderToken: os.Getenv("ZGAME-FOLDER_TOKEN"),
+			}
+			resp, _ := bot.ImportSpreadsheet(req)
+			fmt.Printf("IMPORT SPREADSHEET RESPONSE: %s\n\n", resp.Data.Ticket)
+			//resp, _ := bot.UploadFiles(req)
+			// readerFile := bytes.NewReader(file)
+			// bufferFile, newFileName, _ := ProcessXcelFile(readerFile, fileName)
 
 			// TODO: Upload File in my folder "ZGAME"
 			// bot.UploadFile()
 
 			commands.ClearSession(userID)
+			bot.PostText("The file was processed and uploaded in your ZGAME folder. \nYour session has been reset.", lark.WithUserID(userID))
 		} else {
 			commands.ClearSession(userID)
 		}

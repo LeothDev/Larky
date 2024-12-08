@@ -82,7 +82,7 @@ func ProcessXcelFile(file io.Reader, fileName string) (*bytes.Buffer, string, er
 
 	// Create a new Excel file
 	output := excelize.NewFile()
-	outputSheet := "UniqueRows"
+	outputSheet := "Sheet1"
 	output.NewSheet(outputSheet)
 
 	// Write headers
@@ -104,8 +104,8 @@ func ProcessXcelFile(file io.Reader, fileName string) (*bytes.Buffer, string, er
 	}
 
 	// Set column widths
-	output.SetColWidth(outputSheet, "A", "A", 38) // strId
-	output.SetColWidth(outputSheet, "B", "C", 38) // EN and Italian
+	output.SetColWidth(outputSheet, "A", "A", 60) // strId
+	output.SetColWidth(outputSheet, "B", "C", 60) // EN and Italian
 	output.SetColWidth(outputSheet, "D", "D", 10) // Occurrences
 
 	// Set text wrapping and alignment for strId, EN, Italian
@@ -155,6 +155,8 @@ func ProcessXcelFile(file io.Reader, fileName string) (*bytes.Buffer, string, er
 // (*bytes.Buffer, error)
 func RetrieveFile(bot *lark.Bot, accessToken, messageID, fileKey string) []byte {
 	resp, _ := bot.GetMessageResource(messageID, fileKey)
+	// fmt.Printf("Get Message RESPONSE: %x\n\n", resp.Data)
+	// resp, _ := bot.DownloadFile(fileKey)
 	// fmt.Printf("Get Message RESPONSE: %x\n\n", resp.Data)
 	file := resp.Data
 	return file

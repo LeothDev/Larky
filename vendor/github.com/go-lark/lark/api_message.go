@@ -21,12 +21,8 @@ const (
 	pinMessageURL             = "/open-apis/im/v1/pins"
 	unpinMessageURL           = "/open-apis/im/v1/pins/%s"
 	forwardMessageURL         = "/open-apis/im/v1/messages/%s/forward?receive_id_type=%s"
+	downloadFileURL           = "open-apis/im/v1/files/%s" // CUSTOM
 )
-
-// GetMessageResourceResponse .
-type GetMessageResourceResponse struct {
-	Data []byte // Raw binary data
-}
 
 // PostMessageResponse .
 type PostMessageResponse struct {
@@ -122,6 +118,11 @@ type DeleteEphemeralMessageResponse = BaseResponse
 // RecallMessageResponse .
 type RecallMessageResponse = BaseResponse
 
+// GetMessageResourceResponse .
+type GetMessageResourceResponse struct {
+	Data []byte // Raw binary data
+}
+
 // UpdateMessageResponse .
 type UpdateMessageResponse = BaseResponse
 
@@ -156,6 +157,11 @@ type PinMessageResponse struct {
 
 // UnpinMessageResponse .
 type UnpinMessageResponse = BaseResponse
+
+// DownloadFileResponse .
+type DownloadFileResponse struct {
+	Data []byte // Raw binary data
+}
 
 func newMsgBufWithOptionalUserID(msgType string, userID *OptionalUserID) *MsgBuffer {
 	mb := NewMsgBuffer(msgType)
@@ -447,4 +453,38 @@ func (bot Bot) ForwardMessage(messageID string, receiveID *OptionalUserID) (*For
 	var respData ForwardMessageResponse
 	err := bot.PostAPIRequest("ForwardMessage", url, true, params, &respData)
 	return &respData, err
+}
+
+// TODO: FIX THIS
+func (bot Bot) DownloadFile(fileKey string) (*DownloadFileResponse, error) {
+	url := fmt.Sprintf(downloadFileURL, fileKey)
+
+	// Directly call DoAPIRequest to handle raw binary data
+	header := make(http.Header)
+	header.Set("Content-Type", "application/json; charset=utf-8")
+	if bot.TenantAccessToken() != "" {
+		header.Set("Authorization", fmt.Sprintf("Bearer %s", bot.TenantAccessToken()))
+	}
+
+	// Perform the request and read raw response data
+	req, err := http.NewRequest(http.MethodGet, bot.ExpandURL(url), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header = header
+
+	resp, err := bot.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to perform request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Read the response body into a byte slice
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	// Return raw data in the response struct
+	return &DownloadFileResponse{Data: data}, nil
 }

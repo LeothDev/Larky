@@ -66,6 +66,7 @@ func (bot Bot) DoAPIRequest(
 		respBody = resp.Body
 	}
 	defer respBody.Close()
+
 	err = json.NewDecoder(respBody).Decode(&output)
 	if err != nil {
 		bot.httpErrorLog(prefix, "decode body failed", err)
