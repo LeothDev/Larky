@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/go-lark/lark"
@@ -88,12 +89,19 @@ func HandleEventMessageReceived(event FullEvent, bot *lark.Bot, commands *Comman
 	// Handle based on the state
 	if state == "awaiting_xlsx" {
 		if event.Event.Message.MessageType == "file" {
-			fileKey, _ := utils.ExtractFileMsgContents(content)
+			fileKey, fileName := utils.ExtractFileMsgContents(content)
 			accessToken := bot.TenantAccessToken()
 			messageID := event.Event.Message.MessageID
 			bot.PostText("Your .xlsx file has been received! Processing...", lark.WithUserID(userID))
 
-			RetrieveFile(bot, accessToken, messageID, fileKey)
+			file := RetrieveFile(bot, accessToken, messageID, fileKey)
+			fileName = strings.TrimSuffix(fileName, ".xlsx")
+			readerFile := bytes.NewReader(file)
+			bufferFile, newFileName, _ := ProcessXcelFile(readerFile, fileName)
+
+			// TODO: Upload File in my folder "ZGAME"
+			// bot.UploadFile()
+
 			commands.ClearSession(userID)
 		} else {
 			commands.ClearSession(userID)
